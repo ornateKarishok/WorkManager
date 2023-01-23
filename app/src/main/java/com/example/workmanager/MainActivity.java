@@ -1,43 +1,114 @@
 package com.example.workmanager;
 
+import static android.Manifest.permission.RECORD_AUDIO;
+import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
+import static android.os.Build.VERSION.SDK_INT;
+import static android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION;
+
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.media.MediaPlayer;
+import android.media.MediaRecorder;
+import android.net.Uri;
+import android.os.Build;
+import android.os.Bundle;
+import android.os.Environment;
+import android.provider.Settings;
+import android.view.View;
+import android.widget.Button;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.lifecycle.Observer;
 import androidx.work.OneTimeWorkRequest;
-import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkInfo;
 import androidx.work.WorkManager;
 import androidx.work.WorkRequest;
 
-import android.os.Bundle;
-import android.view.View;
-import android.widget.TextView;
-
-import java.util.concurrent.TimeUnit;
-
 public class MainActivity extends AppCompatActivity {
-    private TextView textView;
-    private WorkRequest uploadWorkRequest;
+    public static final String MESSAGE_STATUS = "message_status";
+    private TextView startTV, stopTV, playTV, stopplayTV, statusTV;
+    private MediaRecorder mRecorder;
+    private MediaPlayer mPlayer;
+    private static String mFileName = null;
+    public static final int REQUEST_AUDIO_PERMISSION_CODE = 1;
+
+    Button btnSend;
+    Button btnSecondActivity;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        textView = findViewById(R.id.textView);
+        btnSend = findViewById(R.id.btnSend);
+        btnSecondActivity = findViewById(R.id.btnSecondActivity);
+        WorkManager mWorkManager =OneTimeWorkRequestSingltone.getInstance(getApplicationContext()).mWorkManager;
+        OneTimeWorkRequest mRequest = OneTimeWorkRequestSingltone.getInstance(getApplicationContext()).mRequest;
+        mWorkManager.cancelAllWork();
+        btnSend.setOnClickListener(v -> {
+            if (CheckPermissions()) {
+                mWorkManager.enqueue(mRequest);
 
-        uploadWorkRequest = new OneTimeWorkRequest.Builder(UploadWorker.class)
-                .build();
-
-//        uploadWorkRequest = new PeriodicWorkRequest.Builder(UploadWorker.class,
-//                15*60*1000, //15 mins is minimum
-//                TimeUnit.MILLISECONDS)
-//                .build();
+            } else {
+                RequestPermissions();
+            }
+        });
+        btnSecondActivity.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, SecondActivity.class);
+            startActivity(intent);
+        });
     }
 
-    public void buttonWorkManager(View view){
-        WorkManager
-                .getInstance(this)
-                .enqueue(uploadWorkRequest);
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_AUDIO_PERMISSION_CODE) {
+            if (grantResults.length > 0) {
+                boolean permissionToRecord = grantResults[0] == PackageManager.PERMISSION_GRANTED;
+                if (SDK_INT >= Build.VERSION_CODES.R) {
+                    if (permissionToRecord) {
+                        Toast.makeText(getApplicationContext(), "Permission Granted", Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Permission Denied", Toast.LENGTH_LONG).show();
+                    }
+                } else {
+                    boolean permissionToStore = grantResults[1] == PackageManager.PERMISSION_GRANTED;
+                    if (permissionToRecord && permissionToStore) {
+                        Toast.makeText(getApplicationContext(), "Permission Granted", Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Permission Denied", Toast.LENGTH_LONG).show();
+                    }
+                }
+            }
+        }
+    }
 
-        textView.setText("Work Manager executed!");
+    public boolean CheckPermissions() {
+        int result1 = ContextCompat.checkSelfPermission(getApplicationContext(), RECORD_AUDIO);
+        if (SDK_INT >= Build.VERSION_CODES.R) {
+            return result1 == PackageManager.PERMISSION_GRANTED;
+        } else {
+            int result = ContextCompat.checkSelfPermission(getApplicationContext(), WRITE_EXTERNAL_STORAGE);
+            return result == PackageManager.PERMISSION_GRANTED && result1 == PackageManager.PERMISSION_GRANTED;
+        }
+    }
+
+    private void RequestPermissions() {
+        if (SDK_INT >= Build.VERSION_CODES.R) {
+            if (!Environment.isExternalStorageManager()) {
+                Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
+                Uri uri = Uri.fromParts("package", getPackageName(), null);
+                intent.setData(uri);
+                startActivity(intent);
+            }
+            ActivityCompat.requestPermissions(MainActivity.this, new String[]{RECORD_AUDIO}, REQUEST_AUDIO_PERMISSION_CODE);
+        } else {
+            ActivityCompat.requestPermissions(MainActivity.this, new String[]{RECORD_AUDIO, WRITE_EXTERNAL_STORAGE}, REQUEST_AUDIO_PERMISSION_CODE);
+        }
     }
 }
