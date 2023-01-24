@@ -3,39 +3,25 @@ package com.example.workmanager;
 import static android.Manifest.permission.RECORD_AUDIO;
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 import static android.os.Build.VERSION.SDK_INT;
-import static android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION;
 
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.media.MediaPlayer;
-import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.Settings;
-import android.view.View;
 import android.widget.Button;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.lifecycle.Observer;
 import androidx.work.OneTimeWorkRequest;
-import androidx.work.WorkInfo;
 import androidx.work.WorkManager;
-import androidx.work.WorkRequest;
 
 public class MainActivity extends AppCompatActivity {
-    public static final String MESSAGE_STATUS = "message_status";
-    private TextView startTV, stopTV, playTV, stopplayTV, statusTV;
-    private MediaRecorder mRecorder;
-    private MediaPlayer mPlayer;
-    private static String mFileName = null;
     public static final int REQUEST_AUDIO_PERMISSION_CODE = 1;
 
     Button btnSend;
@@ -47,8 +33,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         btnSend = findViewById(R.id.btnSend);
         btnSecondActivity = findViewById(R.id.btnSecondActivity);
-        WorkManager mWorkManager =OneTimeWorkRequestSingltone.getInstance(getApplicationContext()).mWorkManager;
-        OneTimeWorkRequest mRequest = OneTimeWorkRequestSingltone.getInstance(getApplicationContext()).mRequest;
+        WorkManager mWorkManager = OneTimeWorkRequestSingleton.getInstance(getApplicationContext()).mWorkManager;
+        OneTimeWorkRequest mRequest = OneTimeWorkRequestSingleton.getInstance(getApplicationContext()).mRequest;
         mWorkManager.cancelAllWork();
         btnSend.setOnClickListener(v -> {
             if (CheckPermissions()) {

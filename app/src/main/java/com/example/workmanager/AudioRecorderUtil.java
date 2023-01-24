@@ -11,31 +11,46 @@ import java.io.IOException;
 public class AudioRecorderUtil {
     private MediaRecorder mRecorder;
     private MediaPlayer mPlayer;
-    private static String mFileName = null;
+    private static String mFilePath = null;
+    private static AudioRecorderUtil audioRecorderUtil = null;
+    private boolean isRecording = false;
+
+    public static AudioRecorderUtil getInstance() {
+        if (audioRecorderUtil == null) {
+            audioRecorderUtil = new AudioRecorderUtil();
+        }
+
+        return audioRecorderUtil;
+    }
+
+    AudioRecorderUtil() {
+        mFilePath = Environment.getExternalStorageDirectory().getAbsolutePath();
+        String FILE_NAME = "/AudioRecording.OGG";
+        mFilePath += FILE_NAME;
+
+        mRecorder = new MediaRecorder();
+        mRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+        mRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
+        mRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
+        new File(mFilePath);
+        mRecorder.setOutputFile(mFilePath);
+    }
 
 
     public void startRecording() {
-
-        mFileName = Environment.getExternalStorageDirectory().getAbsolutePath();
-        mFileName += "/AudioRecording.3gp";
-
-        mRecorder = new MediaRecorder();
-        mRecorder.setAudioSource(MediaRecorder.AudioSource.VOICE_RECOGNITION);
-        mRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
-        mRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
-        new File(mFileName);
-        mRecorder.setOutputFile(mFileName);
         try {
             mRecorder.prepare();
         } catch (IOException e) {
             e.printStackTrace();
         }
         mRecorder.start();
+        isRecording = true;
     }
+
     public void playAudio() {
         mPlayer = new MediaPlayer();
         try {
-            mPlayer.setDataSource(mFileName);
+            mPlayer.setDataSource(mFilePath);
             mPlayer.prepare();
             mPlayer.start();
         } catch (IOException e) {
@@ -45,6 +60,7 @@ public class AudioRecorderUtil {
 
     public void pauseRecording() {
         mRecorder.stop();
+        isRecording = false;
         mRecorder.release();
         mRecorder = null;
     }
@@ -54,4 +70,7 @@ public class AudioRecorderUtil {
         mPlayer = null;
     }
 
+    public boolean isRecording() {
+        return isRecording;
+    }
 }
