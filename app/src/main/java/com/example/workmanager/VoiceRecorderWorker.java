@@ -7,11 +7,11 @@ import androidx.annotation.NonNull;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
-public class UploadWorker extends Worker {
+public class VoiceRecorderWorker extends Worker {
     private static final String WORK_MANAGER_TAG = "WORK_MANAGER_TAG";
 
-    public UploadWorker(@NonNull Context context,
-                        @NonNull WorkerParameters workerParams) {
+    public VoiceRecorderWorker(@NonNull Context context,
+                               @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
     }
 

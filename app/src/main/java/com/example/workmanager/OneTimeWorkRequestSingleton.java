@@ -14,7 +14,7 @@ public class OneTimeWorkRequestSingleton {
 
     private OneTimeWorkRequestSingleton(Context context) {
         mWorkManager = WorkManager.getInstance(context);
-        mRequest = new OneTimeWorkRequest.Builder(UploadWorker.class).addTag(WORK_MANAGER_TAG).build();
+        mRequest = new OneTimeWorkRequest.Builder(VoiceRecorderWorker.class).addTag(WORK_MANAGER_TAG).build();
     }
 
     public static OneTimeWorkRequestSingleton getInstance(Context context) {
